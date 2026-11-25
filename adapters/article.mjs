@@ -50,7 +50,7 @@ export default {
 
   match(url) {
     if (!/^https?:\/\//i.test(url)) return null
-    if (/bilibili\.com|b23\.tv|douyin\.com|iesdouyin\.com/i.test(url)) return null
+    if (/bilibili\.com|b23\.tv|douyin\.com|iesdouyin\.com|xiaohongshu\.com|rednote\.com|xhslink\.cn/i.test(url)) return null
     const id = (url.match(/\/p\/(\d+)/) || url.match(/\/s\/([A-Za-z0-9_-]+)/) || url.match(/([A-Za-z0-9_-]{6,})\/?$/) || [])[1]
     return { id: id || Buffer.from(url).toString('base64url').slice(0, 16), url }
   },

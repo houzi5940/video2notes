@@ -14,7 +14,7 @@
  * 台账：$DATA/ledger.jsonl（同一 key 第二次进来默认不重复抓，除非 --force）
  */
 import { execFile } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, appendFileSync, writeFileSync, statSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, appendFileSync, writeFileSync, statSync, readdirSync, renameSync, rmSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -66,21 +66,41 @@ export async function intake(rawUrl, opts = {}) {
   }
 
   const target = adapter.match(url)
-  const key = `${adapter.id}:${target.id}`
+  let key = `${adapter.id}:${target.id}`
   const prior = ledgerFind(key)
   if (prior && !opts.force) {
     return { ok: true, duplicate: true, key, dir: prior.dir, title: prior.title, note: '这条之前抓过，直接用材料包（要重抓加 --force）' }
   }
 
-  const dir = join(DATA, `${adapter.id}-${target.id}`)
-  mkdirSync(dir, { recursive: true })
+  const tmpDir = join(DATA, `${adapter.id}-${target.id}`)
+  mkdirSync(tmpDir, { recursive: true })
 
   const t0 = Date.now()
   const material = await adapter.fetch(target, {
-    dir, maxMin, comments: wantComments, sh,
+    dir: tmpDir, maxMin, comments: wantComments, sh,
     keywords: opts.keywords || [],
     asr: opts.asr !== false,
   })
+
+  // ⭐ 短链的 id 是短码，真 id 要等 fetch 展开后才知道（小红书 / b23.tv 都是这样）。
+  //    展开后把目录改成正名，否则同一个东西从短链和长链进来会变成两份。
+  let dir = tmpDir
+  let finalKey = key
+  const realId = String(material.source_id || '').trim()
+  if (realId && realId !== String(target.id)) {
+    const realDir = join(DATA, `${adapter.id}-${realId}`)
+    finalKey = `${adapter.id}:${realId}`
+    if (existsSync(join(realDir, 'material.json')) && !opts.force) {
+      rmSync(tmpDir, { recursive: true, force: true })
+      const prev = ledgerFind(finalKey)
+      return { ok: true, duplicate: true, key: finalKey, dir: realDir, title: material.title, note: '这条之前抓过（按展开后的真 id 认出来的），直接用材料包' }
+    }
+    mkdirSync(realDir, { recursive: true })
+    for (const f of readdirSync(tmpDir)) renameSync(join(tmpDir, f), join(realDir, f))
+    rmSync(tmpDir, { recursive: true, force: true })
+    dir = realDir
+  }
+  key = finalKey
   material.schema = 1
   material.fetched_at = new Date().toISOString()
   material.key = key
@@ -101,7 +121,7 @@ export async function intake(rawUrl, opts = {}) {
   writeFileSync(join(dir, 'material.json'), JSON.stringify(material, null, 2), 'utf8')
 
   ledgerPush({
-    key, url, source: adapter.id, id: target.id, title: material.title || '',
+    key, url, source: adapter.id, id: material.source_id || target.id, title: material.title || '',
     author: material.author || '', duration_sec: material.duration_sec ?? null,
     dir, fetched_at: material.fetched_at,
     transcript_kind: material.transcript?.kind || 'none',

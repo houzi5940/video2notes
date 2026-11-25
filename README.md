@@ -28,6 +28,7 @@
 | 字幕取不到时的转写 | 任意兼容 OpenAI 的 `/v1/audio/transcriptions`（本机用 oMLX + whisper-large-v3-turbo） | 跳过转写，只留元数据+评论 |
 | 音频抽取 | ffmpeg | 同上 |
 | 网页文章 | curl | 文章适配器不可用 |
+| 小红书笔记 | curl（正文在页面内嵌 JSON 里） | 小红书适配器不可用；部分笔记有登录墙 |
 
 Node ≥ 22。
 
@@ -111,7 +112,14 @@ export default {
 
 然后在 `adapters/index.mjs` 里按「窄 → 宽」顺序注册（`article` 是通配兜底，必须最后）。下游一行不改。
 
-现有适配器：`bilibili`（可用）、`article`（贴吧/小黑盒/公众号/任意可 curl 页面）、`douyin`（占位，需要 yt-dlp + ASR）。
+现有适配器：
+
+- `bilibili` —— 元数据 + 评论 + 字幕（未登录走本地 ASR）
+- `xiaohongshu` —— 短链自动展开；正文和评论从页面的 `__INITIAL_STATE__` 里取，不需要浏览器。取不到时报「登录墙」，不猜内容
+- `article` —— 贴吧 / 小黑盒 / 公众号 / 任意可 curl 的页面（通用去标签）
+- `douyin` —— 占位，需要 yt-dlp + ASR
+
+> 短链（`xhslink.cn`、`b23.tv`）的 id 是短码，真 id 要等 fetch 展开后才知道——`intake.mjs` 会在展开后用真 id 重命名目录，所以同一个东西从短链和长链进来不会变成两份。
 
 ## 已知限制
 
