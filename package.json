@@ -1,0 +1,35 @@
+{
+  "name": "video2notes",
+  "version": "0.1.0",
+  "description": "把视频/文章读成可核对的知识点笔记，写进 Obsidian：材料包 → 草案 → 补丁 → 落库",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "video2notes-intake": "intake.mjs",
+    "video2notes-write": "write-note.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "intake.mjs",
+    "write-note.mjs",
+    "adapters/",
+    "lib/",
+    "prompts/",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "obsidian",
+    "bilibili",
+    "asr",
+    "whisper",
+    "knowledge-base",
+    "notes"
+  ],
+  "repository": {
+    "type": "git",
+    "url": ""
+  }
+}
