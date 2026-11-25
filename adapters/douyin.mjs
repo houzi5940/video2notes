@@ -4,8 +4,8 @@
  * 抖音没有字幕轨可拉，必须：分享链接 → yt-dlp 下音轨 → 本地 ASR。
  * 本机当前缺 yt-dlp（command -v yt-dlp 为空），ASR 环境也没装。
  * 要启用：
- *   brew install yt-dlp
- *   node ~/.hermes/tools/dsh-bili-watch/scripts/fetch-deps.mjs asr
+ *   brew install yt-dlp                      # 下音轨
+ *   # 转写端点：任何兼容 OpenAI /v1/audio/transcriptions 的服务（本机可用 oMLX + whisper）
  * 装完把下面 fetch 里的 TODO 换成真实现（yt-dlp -f bestaudio -o <dir>/audio.m4a <url>
  *   → ffmpeg 转 wav → watch 的 _bili-asr.py 转写）。
  * 抖音分享链接常带短链（v.douyin.com/xxxx），需要先跟一次 301 拿真实 URL。
