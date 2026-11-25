@@ -30,6 +30,8 @@
   ],
   "repository": {
     "type": "git",
-    "url": ""
-  }
+    "url": "git+https://github.com/houzi5940/video2notes.git"
+  },
+  "homepage": "https://github.com/houzi5940/video2notes#readme",
+  "author": "houzi"
 }
